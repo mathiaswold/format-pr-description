@@ -20,6 +20,17 @@
  *
  * i.e. list item -> `##` header, indentation stripped, wrapped lines unwrapped
  * into a single line per paragraph, and two blank lines between sections.
+ *
+ * For a PR built from a single commit, `gh` emits no bold list headers — the
+ * description is just the commit body verbatim, hard-wrapped and un-indented:
+ *
+ *     As described in owner/repo#123:
+ *
+ *     The first body line
+ *     and its continuation.
+ *
+ * In that case there is nothing to turn into headers, so the whole input is
+ * treated as one body and only the unwrapping is applied.
  */
 
 const HEADER_RE = /^-\s+\*\*(.+?)\*\*\s*$/;
@@ -29,11 +40,6 @@ const LIST_ITEM_RE = /^\s*([-*+]\s+|\d+[.)]\s+)/;
 interface Section {
   title: string;
   body: string[];
-}
-
-/** True if the text contains at least one `- **...**` section header. */
-export function hasPRSections(input: string): boolean {
-  return splitLines(input).some((line) => HEADER_RE.test(line));
 }
 
 export function formatPRDescription(input: string): string {
@@ -51,24 +57,27 @@ export function formatPRDescription(input: string): string {
     // Lines before the first header (a preamble) are dropped.
   }
 
-  // Nothing recognizable — leave the text untouched.
+  // No headers: a single-commit PR. The whole input is the body, and `gh`
+  // does not indent it, so unwrap it as-is without stripping indentation.
   if (sections.length === 0) {
-    return input;
+    return formatBody(splitLines(input), false);
   }
 
   return sections
     .map((section) => {
-      const body = formatBody(section.body);
+      const body = formatBody(section.body, true);
       return body ? `## ${section.title}\n\n${body}` : `## ${section.title}`;
     })
     .join("\n\n\n");
 }
 
-/** De-indent, unwrap prose, and preserve lists / fenced code blocks. */
-function formatBody(rawLines: string[]): string {
-  const lines = rawLines.map((line) =>
-    line.trim() === "" ? "" : line.replace(/^ {1,2}/, "").replace(/\s+$/, ""),
-  );
+/** Optionally de-indent, unwrap prose, and preserve lists / fenced code blocks. */
+function formatBody(rawLines: string[], deindent: boolean): string {
+  const lines = rawLines.map((line) => {
+    if (line.trim() === "") return "";
+    const dedented = deindent ? line.replace(/^ {1,2}/, "") : line;
+    return dedented.replace(/\s+$/, "");
+  });
 
   const blocks: string[] = [];
   let buffer: string[] = [];
