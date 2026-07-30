@@ -29,8 +29,13 @@
       "mode": "no-view",
       "name": "format-pr-description",
       "title": "Format PR description",
-      "subtitle": "",
       "description": "Updates format of PR descriptions created via `gh pr create --fill-verbose`."
+    },
+    {
+      "mode": "no-view",
+      "name": "format-commit-message",
+      "title": "Format commit message",
+      "description": "Wraps a commit message so no line is longer than 72 characters."
     }
   ],
   "title": "Format PR description",

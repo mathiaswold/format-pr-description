@@ -34,6 +34,33 @@ blank lines. Lists and fenced code blocks are preserved as-is.
 If the clipboard is empty or contains no `- **...**` sections, the command
 shows a notice and leaves the clipboard untouched.
 
+## Format commit message
+
+The **Format commit message** command re-wraps the clipboard so no line is
+longer than 72 characters:
+
+```
+Adds a retry helper around the client so transient failures are retried instead
+of surfacing an error to the caller.
+```
+
+becomes
+
+```
+Adds a retry helper around the client so transient failures are retried
+instead of surfacing an error to the caller.
+```
+
+Each paragraph is re-filled from scratch rather than only having its overflow
+pushed down, so no line is left unnaturally short. Lines are broken at
+whitespace only, which means a URL longer than 72 characters is never split —
+it gets a line of its own and overflows it.
+
+Blank lines, the subject line, indentation, list items (with a hanging indent),
+headings, block quotes and fenced code blocks all keep their structure, and a
+trailing block of git trailers (`Co-authored-by:` and friends) is left verbatim
+so its one-trailer-per-line layout survives.
+
 ## Development
 
 ```sh
